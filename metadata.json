@@ -1,0 +1,5 @@
+{
+  "name": "Global Time Sync - World Clock",
+  "description": "A visually appealing world clock application that displays times in various timezones relative to Indian Standard Time (IST). It showcases times for IST, Dublin, PST, and US CST with a sleek, modern interface.",
+  "requestFramePermissions": []
+}
