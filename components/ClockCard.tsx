@@ -75,7 +75,7 @@ const ClockCard: React.FC<ClockCardProps> = ({ time, timezone, timeOffsetInMinut
   const [isEditingLabel, setIsEditingLabel] = useState(false);
   const [isEditingTime, setIsEditingTime] = useState(false);
   const [labelText, setLabelText] = useState(timezone.customLabel || timezone.city);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     setLabelText(timezone.customLabel || timezone.city);
@@ -193,28 +193,34 @@ const ClockCard: React.FC<ClockCardProps> = ({ time, timezone, timeOffsetInMinut
             />
         )}
         <div className="flex-grow">
-            <div className="flex justify-between items-start">
-                <div className="flex items-center gap-2 group flex-1 min-w-0">
-                    {isEditingLabel ? (
-                        <input
-                            ref={inputRef}
-                            type="text"
-                            value={labelText}
-                            onChange={(e) => setLabelText(e.target.value)}
-                            onBlur={handleLabelSave}
-                            onKeyDown={(e) => e.key === 'Enter' && handleLabelSave()}
-                            className="text-xl font-bold bg-transparent border-b-2 border-sky-500 text-slate-900 dark:text-sky-300 outline-none w-full"
-                        />
-                    ) : (
-                        <h2 className="text-xl font-bold text-slate-900 dark:text-sky-300 truncate" title={timezone.customLabel || timezone.city}>{timezone.customLabel || timezone.city}</h2>
-                    )}
-                    {isRemovable && !isEditingLabel && (
-                         <button onClick={() => setIsEditingLabel(true)} className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-500 hover:text-sky-500 flex-shrink-0" aria-label="Edit label">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" /></svg>
-                        </button>
-                    )}
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+            <div className="h-[84px] flex flex-col justify-center">
+                {isEditingLabel ? (
+                    <textarea
+                        ref={inputRef}
+                        value={labelText}
+                        onChange={(e) => setLabelText(e.target.value)}
+                        onBlur={handleLabelSave}
+                        rows={3}
+                        className="text-xl font-bold bg-transparent border-b-2 border-sky-500 text-slate-900 dark:text-sky-300 outline-none w-full resize-none"
+                        aria-label="Edit timezone label"
+                    />
+                ) : (
+                    <div className="flex items-start gap-2 group">
+                        <h2 className="text-xl font-bold text-slate-900 dark:text-sky-300 break-words flex-grow min-w-0 line-clamp-3" title={timezone.customLabel || timezone.city}>
+                            {timezone.customLabel || timezone.city}
+                        </h2>
+                        {isRemovable && (
+                             <button onClick={() => setIsEditingLabel(true)} className="opacity-0 group-hover:opacity-100 transition-opacity text-slate-500 hover:text-sky-500 flex-shrink-0 pt-1" aria-label="Edit label">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" /></svg>
+                            </button>
+                        )}
+                    </div>
+                )}
+            </div>
+            
+            <div className="flex justify-between items-center mb-4">
+                <p className="text-sm text-slate-500 dark:text-slate-400">{timezone.name}</p>
+                 <div className="flex items-center gap-2">
                     {isDay ? <SunIcon /> : <MoonIcon />}
                     <button onClick={() => setIsEditingTime(true)} className="text-slate-500 hover:text-sky-500 transition-colors p-1" aria-label="Set custom time">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5"><path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" /></svg>
@@ -230,21 +236,20 @@ const ClockCard: React.FC<ClockCardProps> = ({ time, timezone, timeOffsetInMinut
                     )}
                 </div>
             </div>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">{timezone.name}</p>
             
             <div className="my-4 text-center flex items-baseline justify-center">
-                <div>
-                    <p className="text-5xl lg:text-6xl xl:text-5xl font-mono font-bold text-slate-800 dark:text-slate-100 tracking-wider">
-                        {formattedTime}
-                    </p>
-                    <span className="text-2xl font-mono font-semibold text-slate-600 dark:text-slate-300 ml-2">{dayPeriod}</span>
-                </div>
+                <p className="text-5xl lg:text-6xl xl:text-5xl font-mono font-bold text-slate-800 dark:text-slate-100 tracking-wider">
+                    {formattedTime}
+                </p>
+                <span className="text-2xl font-mono font-semibold text-slate-600 dark:text-slate-300 ml-2">{dayPeriod}</span>
             </div>
         </div>
         
         <div className="text-center border-t border-slate-300 dark:border-slate-700 pt-4 mt-auto">
              <div>
-                <p className="text-md text-slate-700 dark:text-slate-300">{formattedDate}</p>
+                <div className="h-12 flex items-center justify-center">
+                    <p className="text-md text-slate-700 dark:text-slate-300">{formattedDate}</p>
+                </div>
                 <p className="text-xs text-slate-500 mt-1">
                     {timeDifference}
                     {timeOffsetInMinutes !== 0 && <span className="ml-2 font-bold text-sky-500">(Offset)</span>}
