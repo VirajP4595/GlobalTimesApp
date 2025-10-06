@@ -22,11 +22,59 @@ const AddTimezoneModal: React.FC<AddTimezoneModalProps> = ({ isOpen, onClose, on
             return availableTimezones;
         }
         const lowercasedFilter = searchTerm.toLowerCase();
-        return availableTimezones.filter(tz =>
-            tz.city.toLowerCase().includes(lowercasedFilter) ||
-            tz.name.toLowerCase().includes(lowercasedFilter) ||
-            tz.iana.toLowerCase().includes(lowercasedFilter)
-        );
+
+        // A simple fuzzy match function that returns a score.
+        // Higher score is better. 0 means no match.
+        const getFuzzyScore = (text: string, pattern: string): number => {
+            let score = 0;
+            if (!text) return 0;
+
+            const lowerText = text.toLowerCase();
+            let patternIndex = 0;
+            let textIndex = 0;
+            let consecutiveBonus = 0;
+
+            // Heavily prioritize matches at the start of the string
+            if (lowerText.startsWith(pattern)) {
+                score += 100;
+            } else if (lowerText.includes(pattern)) {
+                score += 20; // Lower score for just including the pattern
+            }
+
+            // Sequential character matching
+            while (patternIndex < pattern.length && textIndex < lowerText.length) {
+                if (pattern[patternIndex] === lowerText[textIndex]) {
+                    score += 1 + consecutiveBonus;
+                    consecutiveBonus++;
+                    patternIndex++;
+                } else {
+                    consecutiveBonus = 0;
+                }
+                textIndex++;
+            }
+            
+            // If not all characters in pattern are found, it's not a match.
+            if (patternIndex !== pattern.length) {
+                return 0;
+            }
+            
+            return score;
+        };
+
+        return availableTimezones
+            .map(tz => {
+                const cityScore = getFuzzyScore(tz.city, lowercasedFilter);
+                const countryScore = getFuzzyScore(tz.country || '', lowercasedFilter);
+                const nameScore = getFuzzyScore(tz.name, lowercasedFilter);
+                const ianaScore = getFuzzyScore(tz.iana, lowercasedFilter);
+                
+                // Prioritize city and country matches
+                const totalScore = (cityScore * 2) + (countryScore * 1.5) + nameScore + ianaScore;
+                
+                return { ...tz, score: totalScore };
+            })
+            .filter(tz => tz.score > 0)
+            .sort((a, b) => b.score - a.score);
     }, [searchTerm, availableTimezones]);
 
 
@@ -62,7 +110,7 @@ const AddTimezoneModal: React.FC<AddTimezoneModalProps> = ({ isOpen, onClose, on
                 <div className="p-4">
                     <input
                         type="text"
-                        placeholder="Search by city, name, or region..."
+                        placeholder="Search by city, country, or region..."
                         value={searchTerm}
                         onChange={e => setSearchTerm(e.target.value)}
                         className="w-full px-4 py-2 bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-lg text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-sky-500"
@@ -77,7 +125,7 @@ const AddTimezoneModal: React.FC<AddTimezoneModalProps> = ({ isOpen, onClose, on
                                 onClick={() => handleAddTimezone(tz)}
                                 className="w-full text-left p-3 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700/50 transition-colors focus:outline-none focus:ring-2 focus:ring-sky-500"
                             >
-                                <p className="font-semibold text-slate-800 dark:text-slate-100">{tz.city}</p>
+                                <p className="font-semibold text-slate-800 dark:text-slate-100">{tz.city}{tz.country ? `, ${tz.country}` : ''}</p>
                                 <p className="text-sm text-slate-600 dark:text-slate-400">{tz.name} ({tz.iana.split('/')[1].replace('_', ' ')})</p>
                             </button>
                         </li>
